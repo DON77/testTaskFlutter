@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constant/colors.dart';
+import '../constant/constants.dart';
 import '../constant/images.dart';
 import '../providers/base_items_provider.dart';
 import '../providers/horizontal_items.dart';
@@ -129,35 +130,44 @@ class _ABListViewState extends State<ABListView> {
     await Future.delayed(const Duration(seconds: 2));
 
     setState(() {
-      widget._itemCount - _initialElementsCount >= 10
-          ? _initialElementsCount += 10
+      _addPaginatedElements();
+    });
+  }
+
+  void _addPaginatedElements() {
+    widget._itemCount - _initialElementsCount >=
+              ProjectConstants.paginationAfterElementsCount
+          ? _initialElementsCount +=
+              ProjectConstants.paginationAfterElementsCount
           : _initialElementsCount = widget._itemCount;
 
-      for (int index = elements.length;
+      for (var index = elements.length;
           index < _initialElementsCount;
           ++index) {
         elements.add(widget._provider.generateItemAt(index));
       }
 
       _isLoading = false;
-    });
+  }
+
+  void _setupInitialValues() {
+    if (widget._itemCount < _initialElementsCount) {
+      _initialElementsCount = widget._itemCount;
+    }
+
+    for (var index = 0; index < _initialElementsCount; ++index) {
+      elements.add(widget._provider.generateItemAt(index));
+    }
   }
 
   @override
   void dispose() {
-  
     super.dispose();
   }
 
   @override
   void initState() {
-    if (widget._itemCount < _initialElementsCount) {
-      _initialElementsCount = widget._itemCount;
-    }
-
-    for (int index = 0; index < _initialElementsCount; ++index) {
-      elements.add(widget._provider.generateItemAt(index));
-    }
+    _setupInitialValues();
     super.initState();
   }
 
