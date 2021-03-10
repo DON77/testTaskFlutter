@@ -132,6 +132,7 @@ class ABListView extends StatelessWidget {
       ),
       height: 160, //MediaQuery.of(context).size.height * 0.35,
       child: ListView.builder(
+          padding: EdgeInsets.zero,
           scrollDirection: _axis,
           itemCount: _itemCount,
           itemBuilder: (context, index) {
