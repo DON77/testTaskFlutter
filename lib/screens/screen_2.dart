@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import '../constant/colors.dart';
 import '../constant/images.dart';
@@ -22,7 +21,6 @@ class _Screen2State extends State<Screen2> {
 
   int _horizontalListViewCount;
   int _verticalListViewCount;
-
 
   @override
   void initState() {
@@ -54,7 +52,6 @@ class _Screen2State extends State<Screen2> {
             itemCount: _horizontalListViewCount,
             provider: _horizontalItemProvider,
             axis: Axis.horizontal,
-            axisName: "Horizontal",
           ),
           ListViewHeader(
             itemCount: _verticalListViewCount,
@@ -67,7 +64,6 @@ class _Screen2State extends State<Screen2> {
               itemCount: _verticalListViewCount,
               provider: _verticalItemProvider,
               axis: Axis.vertical,
-              axisName: "Vertical",
             ),
           ),
         ],
@@ -105,23 +101,65 @@ class ABCancelButton extends StatelessWidget {
   }
 }
 
-class ABListView extends StatelessWidget {
+class ABListView extends StatefulWidget {
   const ABListView({
     Key key,
     @required int itemCount,
     @required BaseItemsProvider provider,
     @required Axis axis,
-    @required String axisName,
   })  : _itemCount = itemCount,
         _provider = provider,
         _axis = axis,
-        _axisName = axisName,
         super(key: key);
 
   final int _itemCount;
   final BaseItemsProvider _provider;
   final Axis _axis;
-  final String _axisName;
+
+  @override
+  _ABListViewState createState() => _ABListViewState();
+}
+
+class _ABListViewState extends State<ABListView> {
+  bool _isLoading = false;
+  int _initialElementsCount = 10;
+  List<String> elements = [];
+
+  Future _loadItem() async {
+    await Future.delayed(const Duration(seconds: 2));
+
+    setState(() {
+      widget._itemCount - _initialElementsCount >= 10
+          ? _initialElementsCount += 10
+          : _initialElementsCount = widget._itemCount;
+
+      for (int index = elements.length;
+          index < _initialElementsCount;
+          ++index) {
+        elements.add(widget._provider.generateItemAt(index));
+      }
+
+      _isLoading = false;
+    });
+  }
+
+  @override
+  void dispose() {
+  
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    if (widget._itemCount < _initialElementsCount) {
+      _initialElementsCount = widget._itemCount;
+    }
+
+    for (int index = 0; index < _initialElementsCount; ++index) {
+      elements.add(widget._provider.generateItemAt(index));
+    }
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -131,52 +169,79 @@ class ABListView extends StatelessWidget {
         horizontal: 16.0,
       ),
       height: 160, //MediaQuery.of(context).size.height * 0.35,
-      child: ListView.builder(
-          padding: EdgeInsets.zero,
-          scrollDirection: _axis,
-          itemCount: _itemCount,
-          itemBuilder: (context, index) {
-            return Container(
-              padding: const EdgeInsets.only(top: 0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              width: MediaQuery.of(context).size.width * 0.88,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    color: ProjectColor.white,
-                    child: Container(
-                      height: 140,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color.fromRGBO(0, 0, 0, 0.15),
-                            spreadRadius: 0,
-                            blurRadius: 8,
-                            offset: Offset(0, 0), // changes position of shadow
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          _provider.itemAt(index) ?? "$_axisName item: 102",
-                          style: const TextStyle(
-                              color: ProjectColor.black,
-                              fontSize: 22.0,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
+      child: Stack(
+        children: [
+          NotificationListener<ScrollNotification>(
+            onNotification: (scrollInfo) {
+              if (!_isLoading &&
+                  scrollInfo.metrics.pixels ==
+                      scrollInfo.metrics.maxScrollExtent) {
+                _loadItem();
+
+                setState(() {
+                  _isLoading = true;
+                });
+              }
+              return true;
+            },
+            child: ListView.builder(
+                padding: EdgeInsets.zero,
+                scrollDirection: widget._axis,
+                itemCount: elements.length, //widget._itemCount,
+                itemBuilder: (context, index) {
+                  return Container(
+                    padding: const EdgeInsets.only(top: 0),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }),
+                    width: MediaQuery.of(context).size.width * 0.88,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          color: ProjectColor.white,
+                          child: Container(
+                            height: 140,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color.fromRGBO(0, 0, 0, 0.15),
+                                  spreadRadius: 0,
+                                  blurRadius: 8,
+                                  offset: Offset(
+                                      0, 0), // changes position of shadow
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                elements[index],
+                                //_provider.generateItemAt(index),
+                                style: const TextStyle(
+                                    color: ProjectColor.black,
+                                    fontSize: 22.0,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+          ),
+          Container(
+            height: _isLoading ? 50.0 : 0,
+            color: Colors.transparent,
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
