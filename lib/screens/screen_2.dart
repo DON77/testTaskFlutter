@@ -7,7 +7,7 @@ import '../providers/horizontal_items.dart';
 import '../providers/vertical_items.dart';
 
 class Screen2 extends StatefulWidget {
-  Screen2({Key key}) : super(key: key);
+  const Screen2({Key key}) : super(key: key);
 
   static const routeName = '/screen_2';
 
@@ -16,35 +16,23 @@ class Screen2 extends StatefulWidget {
 }
 
 class _Screen2State extends State<Screen2> {
-  HorizontalItemsProvider _horizontalItemProvider = HorizontalItemsProvider();
-  VerticalItemsProvider _verticalItemProvider = VerticalItemsProvider();
+  final HorizontalItemsProvider _horizontalItemProvider =
+      HorizontalItemsProvider();
+  final VerticalItemsProvider _verticalItemProvider = VerticalItemsProvider();
 
   int _horizontalListViewCount;
   int _verticalListViewCount;
 
-  Timer _timer;
-
-  @override
-  void dispose() {
-    super.dispose();
-    _timer.cancel();
-  }
 
   @override
   void initState() {
     _horizontalListViewCount = _horizontalItemProvider.itemsCount;
     _verticalListViewCount = _verticalItemProvider.itemsCount;
-    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      setState(() {
-        _horizontalItemProvider = HorizontalItemsProvider();
-        _verticalItemProvider = VerticalItemsProvider();
-        _horizontalListViewCount = _horizontalItemProvider.itemsCount;
-        _verticalListViewCount = _verticalItemProvider.itemsCount;
-        print(_horizontalListViewCount);
-      });
-    });
-
     super.initState();
+  }
+
+  void _closeWidget() {
+    Navigator.of(context).pop();
   }
 
   @override
@@ -54,22 +42,24 @@ class _Screen2State extends State<Screen2> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const ABCancelButton(),
+          ABCancelButton(
+            onPressed: _closeWidget,
+          ),
           ListViewHeader(
             itemCount: _horizontalListViewCount,
             sectionIndex: 1,
-            padding: const EdgeInsets.only(top:16, left: 20, bottom: 16),
+            padding: const EdgeInsets.only(left: 20, bottom: 8),
           ),
           ABListView(
-              itemCount: _horizontalListViewCount,
-              provider: _horizontalItemProvider,
-              axis: Axis.horizontal,
-              axisName: "Horizontal",
-            ),
+            itemCount: _horizontalListViewCount,
+            provider: _horizontalItemProvider,
+            axis: Axis.horizontal,
+            axisName: "Horizontal",
+          ),
           ListViewHeader(
             itemCount: _verticalListViewCount,
             sectionIndex: 2,
-            padding: const EdgeInsets.only(left: 20, top: 16),
+            padding: const EdgeInsets.only(left: 20, top: 8),
           ),
           Expanded(
             flex: 1,
@@ -89,7 +79,10 @@ class _Screen2State extends State<Screen2> {
 class ABCancelButton extends StatelessWidget {
   const ABCancelButton({
     Key key,
+    this.onPressed,
   }) : super(key: key);
+
+  final void Function() onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -97,11 +90,9 @@ class ABCancelButton extends StatelessWidget {
       children: [
         const Spacer(),
         Padding(
-          padding: const EdgeInsets.only(top: 50),
+          padding: const EdgeInsets.only(top: 44),
           child: MaterialButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
+            onPressed: onPressed,
             child: Image.asset(
               ProjectImagePath.cancel,
               height: 24,
@@ -139,23 +130,25 @@ class ABListView extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
         horizontal: 16.0,
       ),
-      height: 160,//MediaQuery.of(context).size.height * 0.35,
+      height: 160, //MediaQuery.of(context).size.height * 0.35,
       child: ListView.builder(
           scrollDirection: _axis,
           itemCount: _itemCount,
           itemBuilder: (context, index) {
             return Container(
-              width: MediaQuery.of(context).size.width * 0.8,
+              padding: const EdgeInsets.only(top: 0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              width: MediaQuery.of(context).size.width * 0.88,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                  Container(
+                    padding: const EdgeInsets.all(10),
                     color: ProjectColor.white,
                     child: Container(
-                      height: 150,
+                      height: 140,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
@@ -163,18 +156,17 @@ class ABListView extends StatelessWidget {
                           BoxShadow(
                             color: Color.fromRGBO(0, 0, 0, 0.15),
                             spreadRadius: 0,
-                            blurRadius: 16,
+                            blurRadius: 8,
                             offset: Offset(0, 0), // changes position of shadow
                           ),
                         ],
                       ),
                       child: Center(
                         child: Text(
-                          _provider.itemAt(index) ??
-                              "$_axisName item: 102",
+                          _provider.itemAt(index) ?? "$_axisName item: 102",
                           style: const TextStyle(
                               color: ProjectColor.black,
-                              fontSize: 24.0,
+                              fontSize: 22.0,
                               fontWeight: FontWeight.bold),
                         ),
                       ),

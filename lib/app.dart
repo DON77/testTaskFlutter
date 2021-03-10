@@ -15,7 +15,7 @@ class App extends StatelessWidget {
         routes: {
           Screen0.routeName: (context) => const Screen0(),
           Screen1.routeName: (context) => const Screen1(),
-          Screen2.routeName: (context) => Screen2(),
+          Screen2.routeName: (context) => const Screen2(),
         },
         pageRouteBuilder: _pageRouteBuilder,
       );
