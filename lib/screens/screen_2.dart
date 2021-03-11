@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../constant/colors.dart';
 import '../constant/constants.dart';
@@ -30,9 +31,7 @@ class _Screen2State extends State<Screen2> {
     super.initState();
   }
 
-  void _closeWidget() {
-    Navigator.of(context).pop();
-  }
+  void _closeWidget() => Navigator.of(context).pop();
 
   @override
   Widget build(BuildContext context) {
@@ -128,26 +127,21 @@ class _ABListViewState extends State<ABListView> {
 
   Future _loadItem() async {
     await Future.delayed(const Duration(seconds: 2));
-
-    setState(() {
-      _addPaginatedElements();
-    });
+    if (!mounted) return;
+    setState(_addPaginatedElements);
   }
 
   void _addPaginatedElements() {
     widget._itemCount - _initialElementsCount >=
-              ProjectConstants.paginationAfterElementsCount
-          ? _initialElementsCount +=
-              ProjectConstants.paginationAfterElementsCount
-          : _initialElementsCount = widget._itemCount;
+            ProjectConstants.paginationAfterElementsCount
+        ? _initialElementsCount += ProjectConstants.paginationAfterElementsCount
+        : _initialElementsCount = widget._itemCount;
 
-      for (var index = elements.length;
-          index < _initialElementsCount;
-          ++index) {
-        elements.add(widget._provider.generateItemAt(index));
-      }
+    for (var index = elements.length; index < _initialElementsCount; ++index) {
+      elements.add(widget._provider.generateItemAt(index));
+    }
 
-      _isLoading = false;
+    _isLoading = false;
   }
 
   void _setupInitialValues() {
@@ -158,11 +152,6 @@ class _ABListViewState extends State<ABListView> {
     for (var index = 0; index < _initialElementsCount; ++index) {
       elements.add(widget._provider.generateItemAt(index));
     }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -181,76 +170,97 @@ class _ABListViewState extends State<ABListView> {
       height: 160, //MediaQuery.of(context).size.height * 0.35,
       child: Stack(
         children: [
-          NotificationListener<ScrollNotification>(
-            onNotification: (scrollInfo) {
-              if (!_isLoading &&
-                  scrollInfo.metrics.pixels ==
-                      scrollInfo.metrics.maxScrollExtent) {
-                _loadItem();
+          _buildListView(),
+          ABCircullarProgressIndicator(isLoading: _isLoading),
+        ],
+      ),
+    );
+  }
 
-                setState(() {
-                  _isLoading = true;
-                });
-              }
-              return true;
-            },
-            child: ListView.builder(
-                padding: EdgeInsets.zero,
-                scrollDirection: widget._axis,
-                itemCount: elements.length, //widget._itemCount,
-                itemBuilder: (context, index) {
-                  return Container(
-                    padding: const EdgeInsets.only(top: 0),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    width: MediaQuery.of(context).size.width * 0.88,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          color: ProjectColor.white,
-                          child: Container(
-                            height: 140,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color.fromRGBO(0, 0, 0, 0.15),
-                                  spreadRadius: 0,
-                                  blurRadius: 8,
-                                  offset: Offset(
-                                      0, 0), // changes position of shadow
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                elements[index],
-                                //_provider.generateItemAt(index),
-                                style: const TextStyle(
-                                    color: ProjectColor.black,
-                                    fontSize: 22.0,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
+  NotificationListener<ScrollNotification> _buildListView() {
+    return NotificationListener<ScrollNotification>(
+          onNotification: (scrollInfo) {
+            if (!_isLoading &&
+                scrollInfo.metrics.pixels ==
+                    scrollInfo.metrics.maxScrollExtent) {
+              _loadItem();
+
+              setState(() {
+                _isLoading = true;
+              });
+            }
+            return true;
+          },
+          child: ListView.builder(
+            padding: EdgeInsets.zero,
+            scrollDirection: widget._axis,
+            itemCount: elements.length, //widget._itemCount,
+            itemBuilder: _buildItemView,
           ),
+        );
+  }
+
+  Container _buildItemView(BuildContext context, int index) {
+    return Container(
+      padding: const EdgeInsets.only(top: 0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      width: MediaQuery.of(context).size.width * 0.88,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Container(
-            height: _isLoading ? 50.0 : 0,
-            color: Colors.transparent,
-            child: const Center(
-              child: CircularProgressIndicator(),
+            padding: const EdgeInsets.all(10),
+            color: ProjectColor.white,
+            child: Container(
+              height: 140,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color.fromRGBO(0, 0, 0, 0.15),
+                    spreadRadius: 0,
+                    blurRadius: 8,
+                    offset: Offset(0, 0), // changes position of shadow
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  elements[index],
+                  //_provider.generateItemAt(index),
+                  style: const TextStyle(
+                      color: ProjectColor.black,
+                      fontSize: 22.0,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class ABCircullarProgressIndicator extends StatelessWidget {
+  const ABCircullarProgressIndicator({
+    Key key,
+    @required bool isLoading,
+  })  : _isLoading = isLoading,
+        super(key: key);
+
+  final bool _isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: _isLoading ? 50.0 : 0,
+      color: Colors.transparent,
+      child: const Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }
@@ -262,13 +272,13 @@ class ListViewHeader extends StatelessWidget {
     @required int itemCount,
     @required int sectionIndex,
     @required EdgeInsetsGeometry padding,
-  })  : countItem = itemCount,
-        index = sectionIndex,
+  })  : _countItem = itemCount,
+        _index = sectionIndex,
         _padding = padding,
         super(key: key);
 
-  final int countItem;
-  final int index;
+  final int _countItem;
+  final int _index;
   final EdgeInsetsGeometry _padding;
 
   @override
@@ -276,7 +286,7 @@ class ListViewHeader extends StatelessWidget {
     return Padding(
       padding: _padding,
       child: Text(
-        "Section $index ($countItem)",
+        "Section $_index ($_countItem)",
         style: const TextStyle(
           color: ProjectColor.black,
           fontSize: 24.0,
