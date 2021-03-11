@@ -140,7 +140,7 @@ class _ABListViewState extends State<ABListView> {
     for (var index = elements.length; index < _initialElementsCount; ++index) {
       elements.add(widget._provider.generateItemAt(index));
     }
-
+    
     _isLoading = false;
   }
 
